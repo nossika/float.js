@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>float.js - demo</title>
+
+</head>
+<body>
+    <div>
+        <iframe id="iframe"></iframe>
+    </div>
+    <div>
+        <textarea id="textarea">
+        </textarea>
+        <button id="run">run</button>
+    </div>
+    <style>
+        iframe{
+            width: 500px;
+            height:500px;
+        }
+        textarea{
+            width: 500px;
+            height: 500px;
+        }
+    </style>
+    <script>
+        let run_btn = document.querySelector('#run');
+        let textarea = document.querySelector('#textarea');
+        let iframe = document.querySelector('#iframe');
+
+        textarea.value = `
+<!DOCTYPE html>
+<html>
+<body>
+<canvas id="canvas"></canvas>
+<style>
+    canvas{
+        width: 400px;
+        height: 400px;
+        background: #333;
+    }
+</style>
+<script src="./float.min.js"><\/script>;
+<script>
+let canvas = document.querySelector('#canvas');
+Float.init(canvas.getContext('2d'), {
+    dot_v: [1, 5]
+});
+<\/script>
+</body>
+</html>
+        `;
+
+        run_btn.addEventListener('click', () => {
+            iframe.srcdoc = textarea.value;
+        });
+        run_btn.click();
+    </script>
+</body>
+</html>
