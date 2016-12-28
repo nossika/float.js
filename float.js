@@ -50,13 +50,13 @@
             }
         }
     };
-    let get_num = (source, fixed = 1) =>{ // source could be Number or Array
+    let get_num = (source, fixed = 1) => { // source could be Number or Array
         return source instanceof Array
             ? source[0] + Math.floor(Math.random() * ((source[1] - source[0]) * fixed + 1)) / fixed
             : source;
     };
     let FloatUtil = {
-        init: (ctx, config = {}) => {
+        init (ctx, config = {}) {
             _ctx = ctx;
             _mouse_dot = null;
             _dot_list = new Set();
@@ -67,7 +67,7 @@
             FloatUtil.suspend();
             FloatUtil.resume();
         },
-        bind_event: () => {
+        bind_event () {
             let events = [];
             if(_config.on_click) events.push('click');
             if(_config.on_mousemove) events.push('mousemove', 'mouseleave');
@@ -76,7 +76,7 @@
                 _ctx.canvas.addEventListener(event, FloatUtil[`on_${event}`]);
             });
         },
-        on_mousemove: (e) => {
+        on_mousemove (e) {
             let [x, y] = [e.offsetX, e.offsetY];
             if(!_mouse_dot){
                 _mouse_dot = new Dot({x: x, y: y});
@@ -86,11 +86,11 @@
             _mouse_dot.x = x;
             _mouse_dot.y = y;
         },
-        on_mouseleave: (e) => {
+        on_mouseleave (e) {
             _dot_list.delete(_mouse_dot);
             _mouse_dot = null;
         },
-        on_click: (e) => {
+        on_click (e) {
             let [x, y] = [e.offsetX, e.offsetY];
             let n = get_num(_config.dot_click);
             for(let i = 0; i < n; i++) {
@@ -103,7 +103,7 @@
                 }))
             }
         },
-        resume: () => {
+        resume () {
             cancelAnimationFrame(_animating_id);
             let animation = () => {
                 FloatUtil.clear();
@@ -112,10 +112,10 @@
             };
             _animating_id = requestAnimationFrame(animation)
         },
-        suspend: () => {
+        suspend () {
             cancelAnimationFrame(_animating_id);
         },
-        update: (dot) => {
+        update (dot) {
             let [top, right, bottom, left] = _borders;
             dot.x = dot.x + dot.v_x;
             dot.y = dot.y + dot.v_y;
@@ -125,7 +125,7 @@
                 FloatUtil.add_dot();
             }
         },
-        render: () => {
+        render () {
             let temp_list = new Set();
             _dot_list.forEach((dot) => {
                 FloatUtil.update(dot);
@@ -150,7 +150,7 @@
                 temp_list.add(dot);
             });
         },
-        auto_add_dot: (num) => {
+        auto_add_dot (num) {
             let interval = setInterval(() => {
                 if(_dot_list.size > num) {
                     clearInterval(interval);
@@ -159,7 +159,7 @@
                 FloatUtil.add_dot();
             }, _config.dot_create)
         },
-        add_dot: () => {
+        add_dot () {
             let [x, y, v_x, v_y] = [
                 get_num([0, _ctx_w]),
                 get_num([0, _ctx_h]),
@@ -193,13 +193,13 @@
                 r: get_num(_config.dot_r, 100)
             }));
         },
-        set_style: (style) => {
+        set_style (style) {
             style = JSON.parse(JSON.stringify(style));
             for(let prop in style){
                 _style[prop] = style[prop];
             }
         },
-        set_size: () => {
+        set_size () {
             if(!_ctx) return;
             _ctx_w = _ctx.canvas.offsetWidth;
             _ctx_h = _ctx.canvas.offsetHeight;
@@ -212,7 +212,7 @@
                 0 - _config.extend_border,
             ];
         },
-        clear: () => {
+        clear () {
             _ctx.clearRect(0, 0, _ctx_w, _ctx_h);
         },
     };
