@@ -14,7 +14,7 @@
     let _config = Object.seal({
         dot_link: 100,
         dot_v: [1, 6],
-        dot_click: [2, 4],
+        dot_click: 3,
         dot_max: 20,
         dot_create: 500,
         dot_r: [0.3, 1.5],
