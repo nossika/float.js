@@ -42,7 +42,7 @@ Click [demo](https://nossika.github.io/float.js/demo.html) to try it online.
 |on_click(e)|trigger click event|
 |on_mousemove(e)|trigger mousemove event|
 
-## Ticks
+## Tips
 
 * Generally, we should execute `set_size()` when canvas size changed for better visual result.
 * Sometimes, we need to trigger `click` / `mousemove` event manually, use method `on_click(e)` / `on_mousemove(e)` to trigger it. `e` could be native JS DOM event or simple as `{offsetX, offsetY}`.
