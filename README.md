@@ -1,6 +1,6 @@
 # float.js
 
-Make some random dots floating on canvas! 
+Create a series of dots floating randomly with interactive animation for mouse events.
 
 ## Examples
 
@@ -13,34 +13,68 @@ Make some random dots floating on canvas!
 		});
 	</script>
 
-Click [demo](https://nossika.github.io/float.js/demo.html) to try it online.
+Click [DEMO](https://nossika.github.io/float.js/demo.html) to try it!
 
-## Options
+## Init options
 
-|Parameter|Type|Default|Description|
-|:-:|:-:|:-:|---|
-|dot_v|Number / Array|[1, 6]|moving velocity of dots|
-|dot_link|Number|100|the distance that dots begin to link|
-|dot_click|Number / Array|3|number of dots created by each click|
-|dot_r|Number / Array|[0.3, 1.5]|radius of dots|
-|dot_max|Number|20|max number of dots on canvas|
-|dot_create|Number|500|the interval between two creation<br>(unit: ms) |
-|on_click|Boolean|true|switch click listener|
-|on_mousemove|Boolean|true|switch mousemove listener|
-|extend_border|Number|30|the buffer distance of dots' disppearence<br>(e.g. 0 indicates that dots will disappear when they touchs canvas' border)|
-|style|Object|{<br>`line`: `{r: 255, g: 255, b: 255}`,<br>`dot`: `{r: 255, g: 255, b: 255, a: 1}`,<br>`width`: `0.6`,<br>}|styles of dots and lines|
+	Float.init(container, options);
+
+* **container** (required, type: HTMLElement)
+
+* **options** (optional, type: Object)
+
+	* **dot_v** (type: Number / Array of Number, default: `[1, 6]`): moving speed of dots, `[1, 6]` represents random speed between 1 and 6
+
+	* **dot_link** (type: Number, default: 100): the distance that dots begin to link
+
+	* **dot_click** (type: Number / Array of Number, default: 3): number of dots created by each click
+
+	* **dot_r** (type: Number / Array of Number, default: `[0.3, 1.5]`): radius of dots
+
+	* **dot_max** (type: Number, default: 20): max number of dots on canvas
+
+	* **dot_create** (type: Number, default: 500): the interval between two creation
+
+	* **on_click** (type: Boolean, default: true): whether to add click listener
+
+	* **on_mousemove** (type: Boolean, default: true): whether to add mousemove listener
+
+	* **extend_border** (type: Number, default: 30): the buffer distance of dots' disppearence. (e.g. 0 represents that dots will disappear when they touchs canvas' border)
+
+	* **style** (type: Object): styles of dots and lines. example: `{width: 0.6, line: {r: 255, g: 255, b: 255}, dot: ...}`
+
+ 
 
 ## Methods
 
-|Methods|Description|
-|:-:|---|
-|init(canvas [,options])|init float on canvas|
-|suspend()|suspend animation|
-|resume()|resume animation|
-|set_size()|auto set canvas width and height by size|
-|set_style(styles_obj)|set styles|
-|on_click(e)|trigger click event|
-|on_mousemove(e)|trigger mousemove event|
+
+* **init(container, options)**
+
+	Check out **Init options** for details.
+
+* **suspend()**
+
+	Suspend animation.
+
+* **resume()**
+
+	Resume animation.
+
+* **set_size()**
+
+	Auto set canvas width and height by size.
+
+* **set_style(config)** 
+
+	Set styles with `config`. Check out **style** in **Init options**.
+
+* **on_click(e)**
+
+	Trigger click event with `e`.
+
+* **on_mousemove(e)**
+
+	Trigger mousemove event with `e`.
 
 ## Tips
 
