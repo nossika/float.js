@@ -12,240 +12,243 @@
     }
 })(() => {
 
-    let _config = Object.seal({
-        dot_link: 100,
-        dot_v: [1, 6],
-        dot_click: 3,
-        dot_max: 20,
-        dot_create: 500,
-        dot_r: [0.3, 1.5],
-        on_mousemove: true,
-        on_click: true,
-        extend_border: 30,
-        style: Object.seal({
-            line: {r: 255, g: 255, b: 255},
-            width: 0.6,
-            dot: {r: 255, g: 255, b: 255, a: 1},
-        })
-    });
-
-    let _style = _config.style;
-    let _ctx, _ctx_w, _ctx_h, _mouse_dot, _dot_list, _animating_id, _borders;
 
     class Dot {
         constructor({
-            x = 0,
-            y = 0,
-            v_x = 0,
-            v_y = 0,
-            r = 0
-        }){
+                        x = 0,
+                        y = 0,
+                        xV = 0,
+                        yV = 0,
+                        r = 0
+                    }){
             this.x = x;
             this.y = y;
-            this.v_x = v_x;
-            this.v_y = v_y;
+            this.xV = xV;
+            this.yV = yV;
             this.r = r;
         }
     }
 
-    let json_clone = (target, source) => { // cover target with source
+    function jsonClone (target, source) { // cover target with source
         for (let item in source) {
             if (source[item] instanceof Object) {
                 target[item] = target[item] instanceof Object
                     ? target[item]
                     : (Object.prototype.toString.call(source[item]) === '[object Array]' ? [] : {});
-                json_clone(target[item], source[item]);
+                jsonClone(target[item], source[item]);
             } else {
                 target[item] = source[item];
             }
         }
     };
 
-    let get_num = (source, fixed = 1) => { // source could be Number or Array
-        return source instanceof Array
-            ? source[0] + Math.floor(Math.random() * ((source[1] - source[0]) * fixed + 1)) / fixed
-            : source;
-    };
+    function randomNum (source, precision = 1) { // get random Number in range
+        return source[0] + Math.floor(Math.random() * ((source[1] - source[0]) * precision + 1)) / precision;
+    }
 
-    let Float = {
-
-        init (canvas, config = {}) {
-            _ctx = canvas.getContext('2d');
-            _mouse_dot = null;
-            _dot_list = new Set();
-            json_clone(_config, config);
-            Float.set_size();
-            Float.bind_event();
-            Float.auto_add_dot(_config.dot_max);
-            Float.suspend();
-            Float.resume();
-        },
-
-        bind_event () {
-            let events = [];
-            if (_config.on_click) events.push('click');
-            if (_config.on_mousemove) events.push('mousemove', 'mouseleave');
-            events.forEach((event) => {
-                _ctx.canvas.removeEventListener(event, Float[`on_${event}`]);
-                _ctx.canvas.addEventListener(event, Float[`on_${event}`]);
+    class Float {
+        constructor (canvas, config = {}) {
+            this._ctx = canvas.getContext('2d');
+            this._mouseDot = null;
+            this._dotList = new Set();
+            this._config = Object.seal({
+                clickDots: 3,
+                maxDots: 20,
+                createInterval: 500,
+                dotRadius: [0.3, 1.5],
+                dotSpeedRange: [1, 6],
+                dotLinkDistance: 100,
+                mousemoveEvent: true,
+                clickEvent: true,
+                borderExtend: 30,
+                style: Object.seal({
+                    line: {r: 255, g: 255, b: 255},
+                    width: 0.6,
+                    dot: {r: 255, g: 255, b: 255, a: 1},
+                })
             });
-        },
+            jsonClone(this._config, config);
 
-        on_mousemove (e) {
+            this.setSize();
+            this.bindEvent();
+            this.autoAddDot(this._config.maxDots);
+            this.suspend();
+            this.resume();
+        }
+
+
+        bindEvent () {
+            let events = [];
+            if (this._config.clickEvent) events.push('click');
+            if (this._config.mousemoveEvent) events.push('mousemove', 'mouseleave');
+            if (this._events) {
+                for (let event in this._events) {
+                    this._ctx.canvas.removeEventListener(event, this._events[event]);
+                }
+            }
+            this._events = {};
+            events.forEach((event) => {
+                this._events[event] = this[event].bind(this);
+                this._ctx.canvas.addEventListener(event, this._events[event]);
+            });
+        }
+
+        mousemove (e) {
             let [x, y] = [e.offsetX, e.offsetY];
-            if (!_mouse_dot) {
-                _mouse_dot = new Dot({x: x, y: y});
-                _dot_list.add(_mouse_dot);
+            if (!this._mouseDot) {
+                this._mouseDot = new Dot({x: x, y: y});
+                this._dotList.add(this._mouseDot);
                 return;
             }
-            _mouse_dot.x = x;
-            _mouse_dot.y = y;
-        },
+            this._mouseDot.x = x;
+            this._mouseDot.y = y;
+        }
 
-        on_mouseleave (e) {
-            _dot_list.delete(_mouse_dot);
-            _mouse_dot = null;
-        },
+        mouseleave (e) {
+            this._dotList.delete(this._mouseDot);
+            this._mouseDot = null;
+        }
 
-        on_click (e) {
+        click (e) {
             let [x, y] = [e.offsetX, e.offsetY];
-            let n = get_num(_config.dot_click);
+            let n = this._config.clickDots;
             for (let i = 0; i < n; i++) {
-                _dot_list.add(new Dot({
+                this._dotList.add(new Dot({
                     x: x,
                     y: y,
-                    v_x: get_num(_config.dot_v, 100) * (Math.random() > 0.5 ? -1 : 1) / 10,
-                    v_y:get_num(_config.dot_v, 100) * (Math.random() > 0.5 ? -1 : 1) / 10,
-                    r: get_num(_config.dot_r, 100),
+                    xV: randomNum(this._config.dotSpeedRange, 100) * (Math.random() > 0.5 ? -1 : 1) / 10,
+                    yV:randomNum(this._config.dotSpeedRange, 100) * (Math.random() > 0.5 ? -1 : 1) / 10,
+                    r: randomNum(this._config.dotRadius, 100),
                 }))
             }
-        },
+        }
 
         resume () {
-            cancelAnimationFrame(_animating_id);
+            cancelAnimationFrame(this._animatingId);
             let animation = () => {
-                Float.clear();
-                Float.render();
-                _animating_id = requestAnimationFrame(animation);
+                this.clear();
+                this.render();
+                this._animatingId = requestAnimationFrame(animation);
             };
-            _animating_id = requestAnimationFrame(animation);
-        },
+            this._animatingId = requestAnimationFrame(animation);
+        }
 
         suspend () {
-            cancelAnimationFrame(_animating_id);
-        },
-
+            cancelAnimationFrame(this._animatingId);
+        }
+        unload () {
+            cancelAnimationFrame(this._animatingId);
+            this.clear();
+        }
         update (dot) {
-            let [top, right, bottom, left] = _borders;
-            dot.x = dot.x + dot.v_x;
-            dot.y = dot.y + dot.v_y;
+            let [top, right, bottom, left] = this._borders;
+            dot.x = dot.x + dot.xV;
+            dot.y = dot.y + dot.yV;
             if (dot.x < left || dot.x > right || dot.y < top || dot.y > bottom) {
-                _dot_list.delete(dot);
-                if (_dot_list.size > _config.dot_max) return;
-                Float.add_dot();
+                this._dotList.delete(dot);
+                if (this._dotList.size > this._config.maxDots) return;
+                this.addDot();
             }
-        },
+        }
 
         render () {
-            let temp_list = new Set();
-            _dot_list.forEach((dot) => {
-                Float.update(dot);
-                if (!_dot_list.has(dot)) return;
+            const tempList = new Set();
+            const { _ctx } = this;
+            this._dotList.forEach((dot) => {
+                this.update(dot);
+                if (!this._dotList.has(dot)) return;
                 _ctx.beginPath();
                 _ctx.moveTo(dot.x, dot.y);
                 _ctx.arc(dot.x, dot.y, dot.r, 0, Math.PI * 2);
                 _ctx.closePath();
-                _ctx.fillStyle = `rgba(${_style.dot.r},${_style.dot.g},${_style.dot.b},${1})`;
+                _ctx.fillStyle = `rgba(${this._config.style.dot.r},${this._config.style.dot.g},${this._config.style.dot.b},${1})`;
                 _ctx.fill();
-                temp_list.forEach((other_dot) => {
-                    let dis = Math.pow(Math.pow(dot.x - other_dot.x, 2) + Math.pow(dot.y - other_dot.y, 2), 1/2);
-                    if (dis > _config.dot_link) return;
+                tempList.forEach((otherDot) => {
+                    let dis = Math.pow(Math.pow(dot.x - otherDot.x, 2) + Math.pow(dot.y - otherDot.y, 2), 1 / 2);
+                    if (dis > this._config.dotLinkDistance) return;
                     _ctx.beginPath();
                     _ctx.moveTo(dot.x, dot.y);
-                    _ctx.lineTo(other_dot.x, other_dot.y);
+                    _ctx.lineTo(otherDot.x, otherDot.y);
                     _ctx.closePath();
-                    _ctx.strokeStyle = `rgba(${_style.line.r},${_style.line.g},${_style.line.b},${(1 - dis/_config.dot_link)*2})`;
-                    _ctx.lineWidth = _style.width;
+                    _ctx.strokeStyle = `rgba(${this._config.style.line.r},${this._config.style.line.g},${this._config.style.line.b},${(1 - dis / this._config.dotLinkDistance) * 2})`;
+                    _ctx.lineWidth = this._config.style.width;
                     _ctx.stroke();
                 });
-                temp_list.add(dot);
+                tempList.add(dot);
             });
-        },
+        }
 
-        auto_add_dot (num) {
+        autoAddDot (num) {
             let interval = setInterval(() => {
-                if (_dot_list.size > num) {
+                if (this._dotList.size > num) {
                     clearInterval(interval);
                     return;
                 }
-                Float.add_dot();
-            }, _config.dot_create);
-        },
+                this.addDot();
+            }, this._config.createInterval);
+        }
 
-        add_dot () {
-            let [x, y, v_x, v_y] = [
-                get_num([0, _ctx_w]),
-                get_num([0, _ctx_h]),
-                get_num(_config.dot_v, 100) * (Math.random() > 0.5 ? -1 : 1) / 10,
-                get_num(_config.dot_v, 100) * (Math.random() > 0.5 ? -1 : 1) / 10
+        addDot () {
+            let [x, y, xV, yV] = [
+                randomNum([0, this._ctxW]),
+                randomNum([0, this._ctxH]),
+                randomNum(this._config.dotSpeedRange, 100) * (Math.random() > 0.5 ? -1 : 1) / 10,
+                randomNum(this._config.dotSpeedRange, 100) * (Math.random() > 0.5 ? -1 : 1) / 10
             ];
-            switch (get_num([0, 3])) {
+            switch (randomNum([0, 3])) {
                 case 0:
                     y = 0;
-                    v_y = Math.abs(v_y);
+                    yV = Math.abs(yV);
                     break;
                 case 1:
-                    x = _ctx_w;
-                    v_x = -Math.abs(v_x);
+                    x = this._ctxW;
+                    xV = -Math.abs(xV);
                     break;
                 case 2:
-                    y = _ctx_h;
-                    v_y = -Math.abs(v_y);
+                    y = this._ctxH;
+                    yV = -Math.abs(yV);
                     break;
                 case 3:
                     x = 0;
-                    v_x = Math.abs(v_x);
+                    xV = Math.abs(xV);
                     break;
             }
 
-            _dot_list.add(new Dot({
-                x: x,
-                y: y,
-                v_x: v_x,
-                v_y: v_y,
-                r: get_num(_config.dot_r, 100)
+            this._dotList.add(new Dot({
+                x,
+                y,
+                xV,
+                yV,
+                r: randomNum(this._config.dotRadius, 100)
             }));
-        },
+        }
 
-        set_style (style) {
+        setStyle (style) {
             style = JSON.parse(JSON.stringify(style));
             for (let prop in style) {
-                _style[prop] = style[prop];
+                this._config.style[prop] = style[prop];
             }
-        },
+        }
 
-        set_size () {
+        setSize () {
+            const { _ctx } = this;
             if (!_ctx) return;
-            _ctx_w = _ctx.canvas.offsetWidth;
-            _ctx_h = _ctx.canvas.offsetHeight;
-            _ctx.canvas.width = _ctx_w;
-            _ctx.canvas.height = _ctx_h;
-            _borders = [
-                0 - _config.extend_border,
-                _ctx_w + _config.extend_border,
-                _ctx_h + _config.extend_border,
-                0 - _config.extend_border,
+            this._ctxW = _ctx.canvas.offsetWidth;
+            this._ctxH = _ctx.canvas.offsetHeight;
+            _ctx.canvas.width = this._ctxW;
+            _ctx.canvas.height = this._ctxH;
+            this._borders = [
+                0 - this._config.borderExtend,
+                this._ctxW + this._config.borderExtend,
+                this._ctxH + this._config.borderExtend,
+                0 - this._config.borderExtend,
             ];
-        },
-
+        }
         clear () {
-            _ctx.clearRect(0, 0, _ctx_w, _ctx_h);
-        },
-
-    };
-
+            this._ctx.clearRect(0, 0, this._ctxW, this._ctxH);
+        }
+    }
     return Float;
-
 });
 
 
